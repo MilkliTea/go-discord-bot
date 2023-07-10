@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -23,18 +24,26 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	var verifyCaptcha = true
 	bot.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		if m.Author.ID == s.State.User.ID {
-			return
+
+		if strings.Contains(m.Content, "captcha") {
+			verifyCaptcha = false
+			s.ChannelMessageSend(m.ChannelID, "<@"+os.Getenv("AUTHOR_ID")+"> hocam bi buraya bak hele yine geldi")
 		}
 
 		if m.Content == "sa" {
+			verifyCaptcha = true
 			s.ChannelMessageSend(m.ChannelID, "as ben bot")
 		}
 
-		if m.Content == "owoh" || m.Content == "owo h" && m.Author.ID == os.Getenv("AUTHOR_ID") && m.ChannelID == os.Getenv("CHANNEL_ID") {
-			time.Sleep(15 * time.Second)
+		if m.Content == "dur" {
+			verifyCaptcha = false
+			s.MessageReactionAdd(m.ChannelID, m.ID, "\U0001F44D")
+		}
+
+		if verifyCaptcha && (m.Content == "owoh" || m.Content == "owo h") {
+			time.Sleep(20 * time.Second)
 			sendFarmMessage()
 		}
 	})
@@ -77,4 +86,6 @@ func sendFarmMessage() {
 	defer resp.Body.Close()
 
 	defer ioutil.ReadAll(resp.Body)
+
+	//log.Print(ioutil.ReadAll(resp.Body))
 }
