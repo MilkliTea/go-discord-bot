@@ -50,13 +50,7 @@ func main() {
 			     break
 			}
 
-			rand.Seed(time.Now().UnixNano())
-			randomNumber := rand.Intn(6) + 15
-			sleepDuration := time.Duration(randomNumber) * time.Second
-			time.Sleep(sleepDuration)
-			randomNumberStr := strconv.Itoa(randomNumber)
-
-			s.ChannelMessageSend(m.ChannelID, randomNumberStr+"saniye")
+		 	time.Sleep(30 * time.Second)
 			sendFarmMessage()
 		    }
 		}
