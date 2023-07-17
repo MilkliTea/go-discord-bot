@@ -53,7 +53,7 @@ func main() {
 			randomNumber := rand.Intn(6) + 15
 			sleepDuration := time.Duration(randomNumber) * time.Second
 			time.Sleep(sleepDuration)
-			    
+			s.ChannelMessageSend(m.ChannelID, randomNumber)
 			sendFarmMessage()
 		    }
 		}
