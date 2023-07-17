@@ -14,6 +14,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"math/rand"
 )
 
 func main() {
