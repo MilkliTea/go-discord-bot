@@ -42,9 +42,19 @@ func main() {
 			s.MessageReactionAdd(m.ChannelID, m.ID, "\U0001F44D")
 		}
 
-		if verifyCaptcha && (m.Content == "owoh" || m.Content == "owo h") {
-			time.Sleep(20 * time.Second)
+		if m.Content == "owoh" || m.Content == "owo h" {
+		    for {
+			if !verifyCaptcha {
+			     break
+			}
+
+			rand.Seed(time.Now().UnixNano())
+			randomNumber := rand.Intn(6) + 15
+			sleepDuration := time.Duration(randomNumber) * time.Second
+			time.Sleep(sleepDuration)
+			    
 			sendFarmMessage()
+		    }
 		}
 	})
 
