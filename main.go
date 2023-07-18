@@ -18,7 +18,10 @@ import (
 
 func main() {
 
-	godotenv.Load()
+	err := godotenv.Load()
+	if err != nil {
+		return
+	}
 
 	bot, err := discordgo.New("Bot " + os.Getenv("BOT_TOKEN"))
 	if err != nil {
@@ -42,15 +45,15 @@ func main() {
 			s.MessageReactionAdd(m.ChannelID, m.ID, "\U0001F44D")
 		}
 
-		if m.Content == "owoh" || m.Content == "owo h" {
-		    for {
-			if !verifyCaptcha {
-			     break
-			}
+		if m.Content == "owoh" {
+			for {
+				if !verifyCaptcha {
+					break
+				}
 
-		 	time.Sleep(30 * time.Second)
-			sendFarmMessage()
-		    }
+				time.Sleep(30 * time.Second)
+				sendFarmMessage()
+			}
 		}
 	})
 
