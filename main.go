@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -30,9 +31,45 @@ func main() {
 	var verifyCaptcha = true
 	bot.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 
+		//captcha geldiğinde botu durdurur.
 		if strings.Contains(m.Content, "captcha") {
 			verifyCaptcha = false
 			s.ChannelMessageSend(m.ChannelID, "<@"+os.Getenv("AUTHOR_ID")+"> hocam bi buraya bak hele yine geldi")
+		}
+
+		// gem bittiği zaman çalışır.
+		if strings.Contains(m.Content, "spent") {
+			sendFarmMessage("owo inv")
+		}
+
+		if strings.Contains(m.Content, "Inventory") {
+			s.ChannelMessageSend(m.ChannelID, "gem bitmiş takviye yapılıyor")
+
+			var text string = "owo use "
+			for i := 1; i < 5; i++ {
+				if i == 2 {
+					continue
+				}
+
+				//inventorydaki gemleri listeler ve en yüksek değerli olanı kullanmak için parse eder
+				regexpString := fmt.Sprintf("(\\d+)`<:(?:c|u|l|r|e|m|f)?gem%d:\\d+>", i)
+				re := regexp.MustCompile(regexpString)
+				matches := re.FindAllStringSubmatch(m.Content, -1)
+
+				var result string
+				for _, match := range matches {
+					result += strings.Replace(match[1], "0", "", -1) + " "
+				}
+
+				nums := strings.Split(result, " ")
+
+				if len(nums) == 0 {
+					continue
+				}
+
+				text += " " + nums[len(nums)-2]
+			}
+			sendFarmMessage(text)
 		}
 
 		if m.Content == "sa" {
@@ -45,6 +82,7 @@ func main() {
 			s.MessageReactionAdd(m.ChannelID, m.ID, "\U0001F44D")
 		}
 
+		//farmı başlatır
 		if m.Content == "owoh" {
 			for {
 				if !verifyCaptcha {
@@ -52,7 +90,7 @@ func main() {
 				}
 
 				time.Sleep(30 * time.Second)
-				sendFarmMessage()
+				sendFarmMessage("owoh")
 			}
 		}
 	})
@@ -74,10 +112,10 @@ func main() {
 	<-sc
 }
 
-func sendFarmMessage() {
+func sendFarmMessage(content string) {
 	url := os.Getenv("CHANNEL_URL")
 	wcfMessage := map[string]interface{}{
-		"content": "owo h",
+		"content": content,
 		"nonce":   time.Now().Format("20230708015126"), // her seferinde farklı olmalı bir nevi message ID'si gibi bir şey
 		"tts":     false,
 	}
