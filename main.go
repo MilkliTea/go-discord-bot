@@ -38,7 +38,7 @@ func main() {
 		}
 
 		// gem bittiği zaman çalışır.
-		if strings.Contains(m.Content, "spent") {
+		if strings.Contains(m.Content, "spent") && strings.Contains(m.Content, "caught") {
 			sendFarmMessage("owo inv")
 		}
 
