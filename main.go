@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -35,6 +36,7 @@ func main() {
 		if strings.Contains(m.Content, "captcha") {
 			verifyCaptcha = false
 			s.ChannelMessageSend(m.ChannelID, "<@"+os.Getenv("AUTHOR_ID")+"> hocam bi buraya bak hele yine geldi")
+			s.ChannelMessageSend(m.ChannelID, "durdum.")
 		}
 
 		// gem bittiği zaman çalışır.
@@ -44,32 +46,7 @@ func main() {
 
 		if strings.Contains(m.Content, "Inventory") {
 			s.ChannelMessageSend(m.ChannelID, "gem bitmiş takviye yapılıyor")
-
-			var text string = "owo use "
-			for i := 1; i < 5; i++ {
-				if i == 2 {
-					continue
-				}
-
-				//inventorydaki gemleri listeler ve en yüksek değerli olanı kullanmak için parse eder
-				regexpString := fmt.Sprintf("(\\d+)`<:(?:c|u|l|r|e|m|f)?gem%d:\\d+>", i)
-				re := regexp.MustCompile(regexpString)
-				matches := re.FindAllStringSubmatch(m.Content, -1)
-
-				var result string
-				for _, match := range matches {
-					result += strings.Replace(match[1], "0", "", -1) + " "
-				}
-
-				nums := strings.Split(result, " ")
-
-				if len(nums) == 0 {
-					continue
-				}
-
-				text += " " + nums[len(nums)-2]
-			}
-			sendFarmMessage(text)
+			updateGems(m.Content)
 		}
 
 		if m.Content == "sa" {
@@ -84,13 +61,20 @@ func main() {
 
 		//farmı başlatır
 		if m.Content == "owoh" {
+			s.ChannelMessageSend(m.ChannelID, "başlıyorum")
 			for {
 				if !verifyCaptcha {
 					break
 				}
 
-				time.Sleep(30 * time.Second)
+				sleepTime := generateRandomNumber(30, 120)
+
+				generateRandomText(sleepTime, 10)
+
+				time.Sleep(sleepTime * time.Second)
 				sendFarmMessage("owo h")
+				time.Sleep(1 * time.Second)
+				sendFarmMessage("owo b")
 			}
 		}
 	})
@@ -135,4 +119,63 @@ func sendFarmMessage(content string) {
 	defer ioutil.ReadAll(resp.Body)
 
 	//log.Print(ioutil.ReadAll(resp.Body))
+}
+
+func generateRandomText(sleepTime time.Duration, length int) {
+
+	rand.Seed(time.Now().UnixNano())
+
+	// Rastgele harfleri içeren bir karakter dizisi
+	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	// Metin uzunluğuna kadar döngü
+	randomText := make([]byte, length)
+	for i := 0; i < length; i++ {
+		// Rastgele bir indeks seç ve karakter dizisinden bir harf al
+		randomIndex := rand.Intn(len(charset))
+		randomChar := charset[randomIndex]
+
+		// Seçilen harfi metin dizisine ekle
+		randomText[i] = randomChar
+	}
+
+	text := fmt.Sprintf("%d sn cooldown. %s", sleepTime, randomText)
+
+	sendFarmMessage(text)
+}
+
+func updateGems(inventory string) {
+	var text string = "owo use "
+	for i := 1; i < 5; i++ {
+		if i == 2 {
+			continue
+		}
+
+		//inventorydaki gemleri listeler ve en yüksek değerli olanı kullanmak için parse eder
+		regexpString := fmt.Sprintf("(\\d+)`<:(?:c|u|l|r|e|m|f)?gem%d:\\d+>", i)
+		re := regexp.MustCompile(regexpString)
+		matches := re.FindAllStringSubmatch(inventory, -1)
+
+		var result string
+		for _, match := range matches {
+			result += strings.Replace(match[1], "0", "", -1) + " "
+		}
+
+		nums := strings.Split(result, " ")
+
+		if len(nums) == 0 {
+			continue
+		}
+
+		text += " " + nums[len(nums)-2]
+	}
+	sendFarmMessage(text)
+}
+
+func generateRandomNumber(min, max int) time.Duration {
+	rand.Seed(time.Now().UnixNano())
+
+	sleepTime := rand.Intn(max-min+1) + min
+
+	return time.Duration(sleepTime)
 }
