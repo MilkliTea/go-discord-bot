@@ -62,11 +62,7 @@ func main() {
 		//farmı başlatır
 		if m.Content == "owoh" {
 			s.ChannelMessageSend(m.ChannelID, "başlıyorum")
-			for {
-				if !verifyCaptcha {
-					break
-				}
-
+			for i := 0; verifyCaptcha; i++ {
 				sleepTime := generateRandomNumber(30, 120)
 
 				generateRandomText(sleepTime, 10)
@@ -75,6 +71,12 @@ func main() {
 				sendFarmMessage("owo h")
 				time.Sleep(1 * time.Second)
 				sendFarmMessage("owo b")
+
+				if (i+1)%10 == 0 {
+					text := fmt.Sprintf("%d kere çalıştım azcık mola veriyorum", i+1)
+					s.ChannelMessageSend(m.ChannelID, text)
+					time.Sleep(240 * time.Second)
+				}
 			}
 		}
 	})
