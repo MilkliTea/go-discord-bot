@@ -102,7 +102,7 @@ func sendFarmMessage(content string) {
 	url := os.Getenv("CHANNEL_URL")
 	wcfMessage := map[string]interface{}{
 		"content": content,
-		"nonce":   time.Now().Format("20230708015126"), // her seferinde farklı olmalı bir nevi message ID'si gibi bir şey
+		"nonce":   time.Now().Format("2023070801512611"), // her seferinde farklı olmalı bir nevi message ID'si gibi bir şey
 		"tts":     false,
 	}
 
