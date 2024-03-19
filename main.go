@@ -30,6 +30,7 @@ func main() {
 		log.Fatal(err)
 	}
 	var verifyCaptcha = true
+	var battleFriends = false
 	bot.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		//captcha geldiğinde botu durdurur.
@@ -54,13 +55,17 @@ func main() {
 			s.ChannelMessageSend(m.ChannelID, "as ben bot")
 		}
 
+		if m.Content == "owob f" {
+			battleFriends = true
+		}
+
 		if m.Content == "dur" {
 			verifyCaptcha = false
 			s.MessageReactionAdd(m.ChannelID, m.ID, "\U0001F44D")
 		}
 
 		//farmı başlatır
-		if m.Content == "owoh" {
+		if m.Content == "owoh" || m.Content == "owob f" {
 			s.ChannelMessageSend(m.ChannelID, "başlıyorum")
 			for i := 0; verifyCaptcha; i++ {
 				sleepTime := generateRandomNumber(30, 120)
@@ -70,7 +75,13 @@ func main() {
 				time.Sleep(sleepTime * time.Second)
 				sendFarmMessage("owo h")
 				time.Sleep(1 * time.Second)
-				sendFarmMessage("owo b")
+
+				battleText := "owo b"
+				if battleFriends {
+					battleText = "owo b " + "<@" + os.Getenv("OTHER_AUTHOR_ID") + ">"
+				}
+
+				sendFarmMessage(battleText)
 
 				if (i+1)%10 == 0 {
 					text := fmt.Sprintf("%d kere çalıştım azcık mola veriyorum", i+1)
@@ -165,7 +176,7 @@ func updateGems(inventory string) {
 
 		nums := strings.Split(result, " ")
 
-		if len(nums) == 0 {
+		if len(nums) < 2 {
 			continue
 		}
 
