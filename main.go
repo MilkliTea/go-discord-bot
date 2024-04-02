@@ -74,6 +74,7 @@ func main() {
 
 		if m.Content == "dur" {
 			verifyCaptcha = false
+			battleFriends = false
 			s.MessageReactionAdd(m.ChannelID, m.ID, "\U0001F44D")
 		}
 
@@ -95,10 +96,12 @@ func main() {
 				sendBattleFarmText(battleFriends)
 
 				if (i+1)%10 == 0 {
+					sleep(2, false)
+					sendFarmMessage("owo pray")
+
 					text := fmt.Sprintf("%d kere çalıştım azcık mola veriyorum", i+1)
 					s.ChannelMessageSend(m.ChannelID, text)
 					sleep(240, fastMode)
-					sendFarmMessage("owo pray")
 				}
 			}
 		}
