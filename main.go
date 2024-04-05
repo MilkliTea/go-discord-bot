@@ -1,25 +1,25 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
-	"io/ioutil"
+	"go-discord-bot/commands"
+	"go-discord-bot/helpers"
 	"log"
-	"math/rand"
-	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
 	"strings"
 	"syscall"
-	"time"
+)
+
+var (
+	verifyCaptcha = true
+	battleFriends = false
+	fastMode      = false
 )
 
 func main() {
-
 	err := godotenv.Load()
 	if err != nil {
 		return
@@ -30,82 +30,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var verifyCaptcha = true
-	var battleFriends = false
-	var fastMode = false
-
-	bot.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-
-		//captcha geldiğinde botu durdurur.
-		if strings.Contains(m.Content, "captcha") {
-			verifyCaptcha = false
-			fastMode = false
-			s.ChannelMessageSend(m.ChannelID, "<@"+os.Getenv("AUTHOR_ID")+"> hocam bi buraya bak hele yine geldi")
-			s.ChannelMessageSend(m.ChannelID, "durdum.")
-		}
-
-		// gem bittiği zaman çalışır.
-		if strings.Contains(m.Content, "spent") && strings.Contains(m.Content, "caught") {
-			sendFarmMessage("owo inv")
-		}
-
-		if strings.Contains(m.Content, "Inventory") {
-			s.ChannelMessageSend(m.ChannelID, "gem bitmiş takviye yapılıyor")
-			sleep(1, false)
-			updateGems(m.Content)
-		}
-
-		if m.Content == "sa" {
-			verifyCaptcha = true
-			s.ChannelMessageSend(m.ChannelID, "as ben bot")
-		}
-
-		if m.Content == "owob fr" {
-			battleFriends = true
-			s.ChannelMessageSend(m.ChannelID, "battle with friends aktif edildi")
-			sendFarmMessage("owoh")
-		}
-
-		if m.Content == "owo fast" {
-			fastMode = true
-			s.ChannelMessageSend(m.ChannelID, "fast mode açıldı")
-			sendFarmMessage("owoh")
-		}
-
-		if m.Content == "dur" {
-			verifyCaptcha = false
-			battleFriends = false
-			s.MessageReactionAdd(m.ChannelID, m.ID, "\U0001F44D")
-		}
-
-		//farmı başlatır
-		if m.Content == "owoh" {
-			if verifyCaptcha {
-				s.ChannelMessageSend(m.ChannelID, "başlıyorum")
-			}
-
-			for i := 0; verifyCaptcha; i++ {
-				sleepTime := generateRandomNumber(30, 120)
-
-				generateRandomText(sleepTime, 10)
-
-				sleep(sleepTime, fastMode)
-
-				sendFarmMessage("owo h")
-
-				sendBattleFarmText(battleFriends)
-
-				if (i+1)%10 == 0 {
-					sleep(2, false)
-					sendFarmMessage("owo pray")
-
-					text := fmt.Sprintf("%d kere çalıştım azcık mola veriyorum", i+1)
-					s.ChannelMessageSend(m.ChannelID, text)
-					sleep(240, fastMode)
-				}
-			}
-		}
-	})
+	bot.AddHandler(handleMessage)
 
 	bot.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages
 
@@ -124,106 +49,76 @@ func main() {
 	<-sc
 }
 
-func sendBattleFarmText(isBattleFriends bool) {
-	sleep(1, false)
-
-	battleText := "owo b"
-	if isBattleFriends {
-		battleText = "owo b " + "<@" + os.Getenv("OTHER_AUTHOR_ID") + ">"
+func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if m.Author.ID == s.State.User.ID {
+		return // Ignore messages sent by the bot itself
 	}
 
-	sendFarmMessage(battleText)
-}
-
-func sendFarmMessage(content string) {
-	url := os.Getenv("CHANNEL_URL")
-	wcfMessage := map[string]interface{}{
-		"content": content,
-		"nonce":   time.Now().Format("2023070801512691"), // her seferinde farklı olmalı bir nevi message ID'si gibi bir şey
-		"tts":     false,
+	if helpers.ContainsCaptcha(m.Content) {
+		stopBot(s, m.ChannelID)
 	}
 
-	jsonValue, _ := json.Marshal(wcfMessage)
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "text/plain")
-	req.Header.Set("Authorization", os.Getenv("BEARER_TOKEN"))
-
-	client := &http.Client{}
-	resp, _ := client.Do(req)
-
-	defer resp.Body.Close()
-
-	defer ioutil.ReadAll(resp.Body)
-
-	//log.Print(ioutil.ReadAll(resp.Body))
-}
-
-func generateRandomText(sleepTime int, length int) {
-
-	rand.Seed(time.Now().UnixNano())
-
-	// Rastgele harfleri içeren bir karakter dizisi
-	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-	// Metin uzunluğuna kadar döngü
-	randomText := make([]byte, length)
-	for i := 0; i < length; i++ {
-		// Rastgele bir indeks seç ve karakter dizisinden bir harf al
-		randomIndex := rand.Intn(len(charset))
-		randomChar := charset[randomIndex]
-
-		// Seçilen harfi metin dizisine ekle
-		randomText[i] = randomChar
+	if helpers.ContainsSpentCaught(m.Content) {
+		commands.SendFarmMessage("owo inv")
 	}
 
-	text := fmt.Sprintf("%d sn cooldown. %s", sleepTime, randomText)
-
-	sendFarmMessage(text)
-}
-
-func updateGems(inventory string) {
-	var text string = "owo use "
-	for i := 1; i < 5; i++ {
-		if i == 2 {
-			continue
-		}
-
-		//inventorydaki gemleri listeler ve en yüksek değerli olanı kullanmak için parse eder
-		regexpString := fmt.Sprintf("(\\d+)`<:(?:c|u|l|r|e|m|f)?gem%d:\\d+>", i)
-		re := regexp.MustCompile(regexpString)
-		matches := re.FindAllStringSubmatch(inventory, -1)
-
-		var result string
-		for _, match := range matches {
-			result += strings.Replace(match[1], "0", "", -1) + " "
-		}
-
-		nums := strings.Split(result, " ")
-
-		if len(nums) < 2 {
-			continue
-		}
-
-		text += " " + nums[len(nums)-2]
+	if helpers.ContainsInventory(m.Content) {
+		s.ChannelMessageSend(m.ChannelID, "gem bitmiş takviye yapılıyor")
+		helpers.Sleep(1, false)
+		commands.UpdateGems(m.Content)
 	}
-	sendFarmMessage(text)
+
+	switch strings.ToLower(m.Content) {
+	case "sa":
+		verifyCaptcha = true
+		s.ChannelMessageSend(m.ChannelID, "as ben bot")
+	case "owob fr":
+		battleFriends = true
+		s.ChannelMessageSend(m.ChannelID, "battle with friends aktif edildi")
+		commands.SendFarmMessage("owoh")
+	case "owo fast":
+		fastMode = true
+		s.ChannelMessageSend(m.ChannelID, "fast mode açıldı")
+		commands.SendFarmMessage("owoh")
+	case "dur":
+		verifyCaptcha = false
+		battleFriends = false
+		s.MessageReactionAdd(m.ChannelID, m.ID, "\U0001F44D")
+	case "owoh":
+		s.ChannelMessageSend(m.ChannelID, "başlıyorum")
+		startFarm(s, m.ChannelID)
+	case "sell ww":
+		commands.SellWeapons()
+		s.ChannelMessageSend(m.ChannelID, "weaponlar satıldı")
+	}
 }
 
-func generateRandomNumber(min, max int) int {
-	rand.Seed(time.Now().UnixNano())
-
-	sleepTime := rand.Intn(max-min+1) + min
-
-	return sleepTime
+func stopBot(s *discordgo.Session, channelID string) {
+	verifyCaptcha = false
+	fastMode = false
+	s.ChannelMessageSend(channelID, "<@"+os.Getenv("AUTHOR_ID")+"> hocam bi buraya bak hele yine geldi")
+	s.ChannelMessageSend(channelID, "durdum.")
 }
 
-func sleep(duration int, isFastMod bool) {
-	if isFastMod {
-		time.Sleep(time.Duration(13) * time.Second)
+func startFarm(s *discordgo.Session, channelID string) {
+	if !verifyCaptcha {
 		return
 	}
 
-	time.Sleep(time.Duration(duration) * time.Second)
+	for i := 0; verifyCaptcha; i++ {
+		sleepTime := helpers.GenerateRandomNumber(30, 120)
+		helpers.GenerateRandomText(sleepTime, 10)
+		helpers.Sleep(sleepTime, fastMode)
+		commands.SendFarmMessage("owo h")
+		helpers.Sleep(1, false)
+		commands.SendBattleFarmText(battleFriends)
+
+		if (i+1)%10 == 0 {
+			helpers.Sleep(2, false)
+			commands.SendFarmMessage("owo pray")
+			text := fmt.Sprintf("%d kere çalıştım azcık mola veriyorum", i+1)
+			s.ChannelMessageSend(channelID, text)
+			helpers.Sleep(240, fastMode)
+		}
+	}
 }
