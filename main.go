@@ -9,14 +9,17 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 )
 
 var (
-	verifyCaptcha = true
-	battleFriends = false
-	fastMode      = false
+	verifyCaptcha  = true
+	battleFriends  = false
+	fastMode       = false
+	amount         = 5000
+	isActiveGamble = false
 )
 
 func main() {
@@ -31,11 +34,11 @@ func main() {
 	}
 
 	bot.AddHandler(handleMessage)
+	bot.AddHandler(handleMessageUpdate)
 
-	bot.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages
+	bot.Identify.Intents = discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsMessageContent
 
 	err = bot.Open()
-
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -71,6 +74,7 @@ func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	switch strings.ToLower(m.Content) {
 	case "sa":
 		verifyCaptcha = true
+		isActiveGamble = true
 		s.ChannelMessageSend(m.ChannelID, "as ben bot")
 	case "owob fr":
 		battleFriends = true
@@ -83,6 +87,7 @@ func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case "dur":
 		verifyCaptcha = false
 		battleFriends = false
+		isActiveGamble = false
 		s.MessageReactionAdd(m.ChannelID, m.ID, "\U0001F44D")
 	case "owoh":
 		s.ChannelMessageSend(m.ChannelID, "başlıyorum")
@@ -92,12 +97,27 @@ func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSend(m.ChannelID, "weaponlar satıldı")
 	case "ping":
 		checkToken(s, m, "ping")
+	case "gamble":
+		commands.SendFarmMessage("owo cf 2000")
+	}
+}
+
+func handleMessageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
+	if m.Author.ID == s.State.User.ID {
+		return // Ignore messages sent by the bot itself
+	}
+
+	if !helpers.GambleWin(m.Content) && isActiveGamble {
+		amount = amount * 2
+	} else {
+		amount = 5000
 	}
 }
 
 func stopBot(s *discordgo.Session, channelID string) {
 	verifyCaptcha = false
 	fastMode = false
+	isActiveGamble = false
 	s.ChannelMessageSend(channelID, "<@"+os.Getenv("AUTHOR_ID")+"> hocam bi buraya bak hele yine geldi")
 	s.ChannelMessageSend(channelID, "durdum.")
 }
@@ -109,11 +129,17 @@ func startFarm(s *discordgo.Session, channelID string) {
 
 	for i := 0; verifyCaptcha; i++ {
 		sleepTime := helpers.GenerateRandomNumber(30, 120)
+
 		helpers.GenerateRandomText(sleepTime, 10)
 		helpers.Sleep(sleepTime, fastMode)
+
 		commands.SendFarmMessage("owo h")
 		helpers.Sleep(1, false)
+
 		commands.SendBattleFarmText(battleFriends)
+		helpers.Sleep(1, false)
+
+		commands.SendGambleMessage(isActiveGamble, strconv.Itoa(amount))
 
 		if (i+1)%10 == 0 {
 			helpers.Sleep(2, false)

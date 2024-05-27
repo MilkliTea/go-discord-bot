@@ -7,7 +7,7 @@ func ContainsCaptcha(content string) bool {
 }
 
 func ContainsSpentCaught(content string) bool {
-	return strings.Contains(content, "spent") || strings.Contains(content, "caught")
+	return strings.Contains(content, "caught")
 }
 
 func ContainsInventory(content string) bool {

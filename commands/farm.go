@@ -93,3 +93,11 @@ func UpdateGems(inventory string) {
 
 	SendFarmMessage(text)
 }
+
+func SendGambleMessage(isActiveGamble bool, amount string) {
+	if !isActiveGamble {
+		return
+	}
+
+	SendFarmMessage("owo cf " + amount)
+}
