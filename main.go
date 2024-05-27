@@ -64,7 +64,7 @@ func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if helpers.ContainsInventory(m.Content) {
 		s.ChannelMessageSend(m.ChannelID, "gem bitmiş takviye yapılıyor")
-		helpers.Sleep(1, false)
+		helpers.Sleep(2, false)
 		commands.UpdateGems(m.Content)
 	}
 
@@ -90,6 +90,8 @@ func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case "sell ww":
 		commands.SellWeapons()
 		s.ChannelMessageSend(m.ChannelID, "weaponlar satıldı")
+	case "ping":
+		checkToken(s, m, "ping")
 	}
 }
 
@@ -121,4 +123,14 @@ func startFarm(s *discordgo.Session, channelID string) {
 			helpers.Sleep(240, fastMode)
 		}
 	}
+}
+
+func checkToken(s *discordgo.Session, m *discordgo.MessageCreate, message string) {
+	send := commands.SendFarmMessage(message)
+
+	if !send {
+		s.ChannelMessageSend(m.ChannelID, "mesaj gönderilemedi. token kontrol ediniz.")
+	}
+
+	s.MessageReactionAdd(m.ChannelID, m.ID, "\U0001F44D")
 }

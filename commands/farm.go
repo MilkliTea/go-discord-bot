@@ -12,11 +12,11 @@ import (
 	"time"
 )
 
-func SendFarmMessage(content string) {
+func SendFarmMessage(content string) bool {
 	url := os.Getenv("CHANNEL_URL")
 	wcfMessage := map[string]interface{}{
 		"content": content,
-		"nonce":   time.Now().Format("2023070801512691"), // her seferinde farklı olmalı bir nevi message ID'si gibi bir şey
+		"nonce":   time.Now().Format("202307080151269192"), // her seferinde farklı olmalı bir nevi message ID'si gibi bir şey
 		"tts":     false,
 	}
 
@@ -30,11 +30,16 @@ func SendFarmMessage(content string) {
 	client := &http.Client{}
 	resp, _ := client.Do(req)
 
+	if resp.StatusCode != 200 {
+		return false
+	}
+
 	defer resp.Body.Close()
 
 	defer ioutil.ReadAll(resp.Body)
 
 	//log.Print(ioutil.ReadAll(resp.Body))
+	return true
 }
 
 func SendBattleFarmText(isBattleFriends bool) {
@@ -60,6 +65,7 @@ func SellWeapons() {
 
 func UpdateGems(inventory string) {
 	var text string = "owo use "
+
 	for i := 1; i < 5; i++ {
 		if i == 2 {
 			continue
@@ -83,6 +89,7 @@ func UpdateGems(inventory string) {
 
 		text += " " + nums[len(nums)-2]
 	}
+	fmt.Println(text)
 
 	SendFarmMessage(text)
 }
