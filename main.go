@@ -163,6 +163,7 @@ func startFarm(s *discordgo.Session, channelID string) {
 }
 
 func startGambleFarm() {
+	commands.SendFarmMessage("owo cash", os.Getenv("GAMBLE_CHANNEL_URL"))
 	for i := 0; verifyCaptcha; i++ {
 		commands.SendGambleMessage(isActiveGamble, strconv.Itoa(amount))
 		helpers.Sleep(20, false)
