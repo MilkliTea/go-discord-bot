@@ -12,8 +12,7 @@ import (
 	"time"
 )
 
-func SendFarmMessage(content string) bool {
-	url := os.Getenv("CHANNEL_URL")
+func SendFarmMessage(content string, url string) bool {
 	wcfMessage := map[string]interface{}{
 		"content": content,
 		"nonce":   time.Now().Format("202307080151269192"), // her seferinde farklı olmalı bir nevi message ID'si gibi bir şey
@@ -48,19 +47,19 @@ func SendBattleFarmText(isBattleFriends bool) {
 		battleText = "owo b " + "<@" + os.Getenv("OTHER_AUTHOR_ID") + ">"
 	}
 
-	SendFarmMessage(battleText)
+	SendFarmMessageToMainChannel(battleText)
 }
 
 func SellWeapons() {
-	SendFarmMessage("owo wc all")
+	SendFarmMessageToMainChannel("owo wc all")
 	time.Sleep(time.Duration(5) * time.Second)
-	SendFarmMessage("owo sell uncommonweapons")
+	SendFarmMessageToMainChannel("owo sell uncommonweapons")
 	time.Sleep(time.Duration(3) * time.Second)
-	SendFarmMessage("owo sell commonweapons")
+	SendFarmMessageToMainChannel("owo sell commonweapons")
 	time.Sleep(time.Duration(3) * time.Second)
-	SendFarmMessage("owo sell rareweapons")
+	SendFarmMessageToMainChannel("owo sell rareweapons")
 	time.Sleep(time.Duration(3) * time.Second)
-	SendFarmMessage("owo sell epicweapons")
+	SendFarmMessageToMainChannel("owo sell epicweapons")
 }
 
 func UpdateGems(inventory string) {
@@ -91,7 +90,7 @@ func UpdateGems(inventory string) {
 	}
 	fmt.Println(text)
 
-	SendFarmMessage(text)
+	SendFarmMessageToMainChannel(text)
 }
 
 func SendGambleMessage(isActiveGamble bool, amount string) {
@@ -99,5 +98,10 @@ func SendGambleMessage(isActiveGamble bool, amount string) {
 		return
 	}
 
-	SendFarmMessage("owo cf " + amount)
+	SendFarmMessage("owo cf "+amount, os.Getenv("GAMBLE_CHANNEL_URL"))
+}
+
+func SendFarmMessageToMainChannel(content string) bool {
+
+	return SendFarmMessage(content, os.Getenv("CHANNEL_URL"))
 }

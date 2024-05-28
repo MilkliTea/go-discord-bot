@@ -8,7 +8,6 @@ import (
 )
 
 func GenerateRandomText(sleepTime int, length int) {
-
 	rand.Seed(time.Now().UnixNano())
 
 	// Rastgele harfleri içeren bir karakter dizisi
@@ -27,7 +26,7 @@ func GenerateRandomText(sleepTime int, length int) {
 
 	text := fmt.Sprintf("%d sn cooldown. %s", sleepTime, randomText)
 
-	commands.SendFarmMessage(text)
+	commands.SendFarmMessageToMainChannel(text)
 }
 
 func GenerateRandomNumber(min, max int) int {

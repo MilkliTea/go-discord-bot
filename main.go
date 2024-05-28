@@ -53,8 +53,13 @@ func main() {
 }
 
 func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if s == nil || s.State == nil || s.State.User == nil {
+		fmt.Printf("session, session state, or user is nil")
+		return
+	}
+
 	if m.Author.ID == s.State.User.ID {
-		return // Ignore messages sent by the bot itself
+		return
 	}
 
 	if helpers.ContainsCaptcha(m.Content) {
@@ -62,7 +67,7 @@ func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if helpers.ContainsSpentCaught(m.Content) {
-		commands.SendFarmMessage("owo inv")
+		commands.SendFarmMessageToMainChannel("owo inv")
 	}
 
 	if helpers.ContainsInventory(m.Content) {
@@ -79,11 +84,11 @@ func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case "owob fr":
 		battleFriends = true
 		s.ChannelMessageSend(m.ChannelID, "battle with friends aktif edildi")
-		commands.SendFarmMessage("owoh")
+		commands.SendFarmMessageToMainChannel("owoh")
 	case "owo fast":
 		fastMode = true
 		s.ChannelMessageSend(m.ChannelID, "fast mode açıldı")
-		commands.SendFarmMessage("owoh")
+		commands.SendFarmMessageToMainChannel("owoh")
 	case "dur":
 		verifyCaptcha = false
 		battleFriends = false
@@ -98,13 +103,19 @@ func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case "ping":
 		checkToken(s, m, "ping")
 	case "gamble":
-		commands.SendFarmMessage("owo cf 2000")
+		s.ChannelMessageSend(m.ChannelID, "para botu aktif edildi")
+		startGambleFarm()
 	}
 }
 
 func handleMessageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
+	if m.ChannelID != os.Getenv("GAMBLE_CHANNEL_ID") {
+
+		return
+	}
+
 	if m.Author.ID == s.State.User.ID {
-		return // Ignore messages sent by the bot itself
+		return
 	}
 
 	if !helpers.GambleWin(m.Content) && isActiveGamble {
@@ -133,17 +144,17 @@ func startFarm(s *discordgo.Session, channelID string) {
 		helpers.GenerateRandomText(sleepTime, 10)
 		helpers.Sleep(sleepTime, fastMode)
 
-		commands.SendFarmMessage("owo h")
+		commands.SendFarmMessageToMainChannel("owo h")
 		helpers.Sleep(1, false)
 
 		commands.SendBattleFarmText(battleFriends)
 		helpers.Sleep(1, false)
 
-		commands.SendGambleMessage(isActiveGamble, strconv.Itoa(amount))
+		//commands.SendGambleMessage(isActiveGamble, strconv.Itoa(amount))
 
 		if (i+1)%10 == 0 {
 			helpers.Sleep(2, false)
-			commands.SendFarmMessage("owo pray")
+			commands.SendFarmMessageToMainChannel("owo pray")
 			text := fmt.Sprintf("%d kere çalıştım azcık mola veriyorum", i+1)
 			s.ChannelMessageSend(channelID, text)
 			helpers.Sleep(240, fastMode)
@@ -151,8 +162,22 @@ func startFarm(s *discordgo.Session, channelID string) {
 	}
 }
 
+func startGambleFarm() {
+	for i := 0; verifyCaptcha; i++ {
+		commands.SendGambleMessage(isActiveGamble, strconv.Itoa(amount))
+		helpers.Sleep(20, false)
+
+		if (i+1)%10 == 0 {
+			helpers.Sleep(2, true)
+			commands.SendFarmMessageToMainChannel("owo cash")
+
+			helpers.Sleep(40, false)
+		}
+	}
+}
+
 func checkToken(s *discordgo.Session, m *discordgo.MessageCreate, message string) {
-	send := commands.SendFarmMessage(message)
+	send := commands.SendFarmMessageToMainChannel(message)
 
 	if !send {
 		s.ChannelMessageSend(m.ChannelID, "mesaj gönderilemedi. token kontrol ediniz.")
