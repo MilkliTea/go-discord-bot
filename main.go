@@ -18,7 +18,7 @@ var (
 	verifyCaptcha  = true
 	battleFriends  = false
 	fastMode       = false
-	amount         = 5000
+	amount         = 1000
 	isActiveGamble = false
 )
 
@@ -121,7 +121,8 @@ func handleMessageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 	if !helpers.GambleWin(m.Content) && isActiveGamble {
 		amount = amount * 2
 	} else {
-		amount = 5000
+		//commands.SendGambleMessage(isActiveGamble, "all")
+		amount = 1000
 	}
 }
 
