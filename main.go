@@ -120,6 +120,9 @@ func handleMessageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 
 	if !helpers.GambleWin(m.Content) && isActiveGamble {
 		amount = amount * 2
+		if amount > 250000 {
+			amount = 250000
+		}
 	} else {
 		//commands.SendGambleMessage(isActiveGamble, "all")
 		amount = 1000
