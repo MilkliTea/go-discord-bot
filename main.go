@@ -103,6 +103,7 @@ func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case "ping":
 		checkToken(s, m, "ping")
 	case "gamble":
+		isActiveGamble = true
 		s.ChannelMessageSend(m.ChannelID, "para botu aktif edildi")
 		startGambleFarm()
 	}
